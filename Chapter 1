@@ -1,0 +1,61 @@
+require 'rest-client'
+require 'json'
+
+class CargoTransportation
+  def initialize
+    @weight = 0
+    @length = 0
+    @width = 0
+    @height = 0
+    @distance = 0
+    @price = 0
+  end
+
+  def input_cargo_params
+    puts "Enter weight of the cargo (kg):"
+    @weight = gets.chomp.to_f
+    puts "Enter length of the cargo (cm):"
+    @length = gets.chomp.to_f
+    puts "Enter width of the cargo (cm):"
+    @width = gets.chomp.to_f
+    puts "Enter height of the cargo (cm):"
+    @height = gets.chomp.to_f
+  end
+
+  def input_route
+    puts "Enter departure point:"
+    @departure = gets.chomp
+    puts "Enter destination point:"
+    @destination = gets.chomp
+  end
+
+  def calculate_distance
+    response = RestClient.get "https://api.distancematrix.ai/maps/api/distancematrix/json?origins=#{@departure}&destinations=#{@destination}&key=YOUR_API_KEY"
+    data = JSON.parse(response)
+    @distance = data["rows"][0]["elements"][0]["distance"]["value"]
+  end
+
+  def calculate_price
+    volume = @length * @width * @height / 1000000.0 # Convert to cubic meters
+    if volume < 1
+      @price = @distance / 1000.0
+    elsif @weight <= 10
+      @price = @distance * 2 / 1000.0
+    else
+      @price = @distance * 3 / 1000.0
+    end
+  end
+
+  def run
+    input_cargo_params
+    input_route
+    calculate_distance
+    calculate_price
+
+    result = { weight: @weight, length: @length, width: @width, height: @height, distance: @distance, price: @price }
+    puts "Result: #{result}"
+  end
+end
+
+'QeNtawyBRQdpDxIs3FZksIRKH7nOns5xVlKhlqjHDSekqnjS513qrpFgTSR7xnjw'
+CargoTransportation.new.run
